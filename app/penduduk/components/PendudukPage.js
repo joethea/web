@@ -725,7 +725,7 @@ const ambilLokasiMengaji = useCallback(async (kategori) => {
 
   try {
     const res = await fetch(
-      `http://localhost:3000/api/penduduk?distinct=lokasi_mengaji&kategori=${kategoriParam}`
+      `/api/penduduk?distinct=lokasi_mengaji&kategori=${kategoriParam}`
     );
     const hasil = await res.json();
     setLokasiMengajiList(hasil.data || []);
@@ -1014,7 +1014,7 @@ if (Array.isArray(filterBantuanOverride) && filterBantuanOverride.length > 0) {
 }
 
   try {
-    const res = await fetch(`http://localhost:3000/api/penduduk?${params.toString()}`);
+    const res = await fetch(`/api/penduduk?${params.toString()}`);
     const hasil = await res.json();
 
     // filter manual non-produktif
@@ -1075,7 +1075,7 @@ if (Array.isArray(filterBantuanOverride) && filterBantuanOverride.length > 0) {
   // Ambil semua data untuk dropdown filter dan statistik mini
   const ambilSemuaData = useCallback(async () => {
   try {
-    const res = await fetch('http://localhost:3000/api/penduduk?limit=10000');
+    const res = await fetch('/api/penduduk?limit=10000');
     const hasil = await res.json();
     if (!hasil || !Array.isArray(hasil.data)) return;
     setAllData(hasil.data);
@@ -2807,7 +2807,7 @@ preConfirm: async () => {
     };
 
     // kirim ke backend
-    const res = await fetch('http://localhost:3000/api/penduduk', {
+    const res = await fetch('/api/penduduk', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
