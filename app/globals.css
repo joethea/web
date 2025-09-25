@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-gray-100;
+}
+
+
+/* Pastikan swal nested modal punya z-index lebih tinggi */
+.swal2-container {
+  z-index: 10000 !important; /* default popup utama */
+}
+
+.swal2-container.nested-swal {
+  z-index: 20000 !important; /* popup nested (lokasi dayah) */
+}
+
+
