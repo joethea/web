@@ -3511,7 +3511,8 @@ useEffect(() => {
    
 
       {/* START: Container baru untuk menyejajarkan kolom */}
-      <div className="flex flex-col lg:flex-row gap-4">
+      <div className="flex flex-col lg:grid lg:grid-cols-[2fr_1fr] gap-4 lg:h-[calc(100vh-6rem)]">
+        <div className="w-full lg:pr-2 lg:overflow-y-auto scrollbar-hide">
         {/* Kolom utama (tabel data penduduk) */}
         <div className="flex-grow overflow-x-auto bg-white rounded shadow">
           <table className="w-full text-sm border border-gray-200 border-t rounded-lg overflow-hidden">
@@ -3620,11 +3621,11 @@ useEffect(() => {
     {renderPagination()}
         </div>
     </div>
-
+</div>
 
 
        {/* Kolom 2 (Anggota & Detail Keluarga) */}
-<div className="w-full lg:w-1/3 flex flex-col gap-4">
+<div className="w-full flex flex-col gap-4 lg:pl-2 lg:overflow-y-auto scrollbar-hide">
   {(() => {
     let kategori = null;
     let adaKepala = false;

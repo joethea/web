@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ResponsiveContainer,
   BarChart,
@@ -32,58 +31,10 @@ const BUSINESS_COLORS = [
   "#F97316", // Orange
 ];
 
-// Helper untuk tooltip
+// 📌 Helper untuk tooltip
 const tooltipFormatter = (val) => [`${val} penduduk`, "Jumlah"];
 
-// Styling Tooltip umum
-const commonTooltipStyle = {
-  contentStyle: {
-    backgroundColor: '#FFFFFF',
-    border: '1px solid #D1D5DB',
-    borderRadius: '8px',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-    padding: '8px 12px'
-  },
-  labelStyle: {
-    fontWeight: '600',
-    color: '#1F2937',
-    marginBottom: '4px'
-  },
-  itemStyle: {
-    color: '#374151',
-    fontSize: '13px'
-  }
-};
-
-// Styling Axis umum
-const commonAxisTickStyle = {
-  fontSize: 12,
-  fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
-  fill: '#6B7280',
-  fontWeight: 500
-};
-
-// mapping foto ketua dusun (taruh di /public/ketua/)
-const ketuaImages = {
-  "Dusun A": "/ketua/Dusun A.jpg",
-  "Dusun B": "/ketua/Dusun B.jpg",
-  "Dusun C": "/ketua/Dusun C.jpg",
-  "Dusun D": "/ketua/Dusun D.jpg",
-  Unknown: "/ketua/default.jpg",
-};
-
-// label kategori umur dengan rentang
-const umurLabelMap = {
-  Balita: "Balita (0-4)",
-  "Anak-anak": "Anak (5-14)",
-  Remaja: "Remaja (15-24)",
-  Dewasa: "Dewasa (25-59)",
-  Lansia: "Lansia (60+)",
-  "Tidak diketahui": "Tidak diketahui",
-};
-
-// Komponen Card wrapper
+// 📌 Card Wrapper dengan styling bisnis
 function Card({ title, children }) {
   return (
     <div className="bg-white rounded-lg shadow p-4 border border-gray-200">
@@ -93,149 +44,101 @@ function Card({ title, children }) {
   );
 }
 
-// Komponen Card per Dusun
-function DusunCard({ dusun, data }) {
+// 📌 Dusun Card Component
+function DusunCard({ dusun, stats }) {
+  const total = stats?.jml || 0;
+  const lakiLaki = stats?.jenisKelamin?.L || 0;
+  const perempuan = stats?.jenisKelamin?.P || 0;
+  const anakAnak = stats?.umurKategori?.["Anak-anak (5-12)"] || 0;
+  const remaja = stats?.umurKategori?.["Remaja (13-17)"] || 0;
+  const dewasa = (stats?.umurKategori?.["Dewasa Muda (18-25)"] || 0) + (stats?.umurKategori?.["Dewasa (26-45)"] || 0);
+  const lansia = stats?.umurKategori?.["Lansia (65+)"] || 0;
+  const kawin = stats?.statusKawin?.sudah || 0;
+  const belumKawin = stats?.statusKawin?.belum || 0;
+  const pernahKawin = stats?.statusKawin?.pernah || 0;
+
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-200 h-full">
-      {/* Header: foto ketua dusun */}
-      <div
-        className="bg-indigo-600 text-white flex items-center gap-3 py-3"
-        style={{ paddingLeft: "6px", paddingRight: "6px" }}
-      >
-        <Image
-          src={ketuaImages[dusun] || ketuaImages.Unknown}
-          alt={`Ketua ${dusun}`}
-          width={48}
-          height={48}
-          className="w-12 h-12 rounded-full border-2 border-white object-cover"
+    <div className="bg-white rounded-lg shadow border border-gray-200 mb-4">
+      {/* Header dengan foto ketua dusun (placeholder image) */}
+      <div className="h-32 bg-gray-300 rounded-t-lg flex items-center justify-center">
+        <img
+          src={`https://via.placeholder.com/100?text=Ketua+Dusun+${dusun}`}
+          alt={`Foto Ketua Dusun ${dusun}`}
+          className="w-24 h-24 rounded-full border-4 border-white -mt-12"
         />
-        <h3 className="text-lg font-semibold">{dusun}</h3>
       </div>
-      {/* Isi statistik utama */}
-      <div
-        className="space-y-4 text-sm"
-        style={{ paddingLeft: "9px", paddingRight: "6px", paddingTop: "12px", paddingBottom: "12px" }}
-      >
-        {/* total L P */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="font-medium text-gray-600">Total</div>
-          <div className="font-semibold text-gray-900">{data.total}</div>
-          <div className="font-medium text-gray-600">Laki-laki</div>
-          <div className="text-blue-600 font-semibold">{data.L}</div>
-          <div className="font-medium text-gray-600">Perempuan</div>
-          <div className="text-pink-600 font-semibold">{data.P}</div>
-        </div>
-        {/* Umur kategori breakdown */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-              👶 Kategori Umur
-              <span
-                className="text-gray-400 cursor-pointer"
-                title="Balita: 0-4 | Anak-anak: 5-14 | Remaja: 15-24 | Dewasa: 25-59 | Lansia: 60+"
-              >
-                ℹ
-              </span>
-            </h4>
-            <div className="grid grid-cols-3 text-xs font-semibold text-gray-500 w-32 text-center">
-              <span>L</span>
-              <span>P</span>
-              <span>JLH</span>
-            </div>
-          </div>
-          <div className="space-y-1">
-            {Object.entries(data.umurKategori).map(([cat, val]) => {
-              const total = val.L + val.P;
-              return (
-                <div
-                  key={cat}
-                  className="grid grid-cols-[1fr_8rem] bg-gray-50 py-1 rounded text-sm items-center"
-                  style={{ paddingLeft: "6px", paddingRight: "6px" }}
-                >
-                  <span className="truncate">{umurLabelMap[cat] || cat}</span>
-                  <div className="grid grid-cols-3 text-center">
-                    <span className="text-blue-600">{val.L}</span>
-                    <span className="text-pink-600">{val.P}</span>
-                    <span className="text-gray-600">{total}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-        {/* Status kawin breakdown */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold text-gray-700 flex items-center gap-2">
-              💍 Status Kawin
-              <span
-                className="text-gray-400 cursor-pointer"
-                title="Status pernikahan penduduk"
-              >
-                ℹ
-              </span>
-            </h4>
-            <div className="grid grid-cols-3 text-xs font-semibold text-gray-500 w-32 text-center">
-              <span>L</span>
-              <span>P</span>
-              <span>JLH</span>
-            </div>
-          </div>
-          <div className="space-y-1">
-            {Object.entries(data.statusKawin).map(([st, val]) => {
-              const total = val.L + val.P;
-              return (
-                <div
-                  key={st}
-                  className="grid grid-cols-[1fr_8rem] bg-gray-50 py-1 rounded text-sm items-center"
-                  style={{ paddingLeft: "9px", paddingRight: "6px" }}
-                >
-                  <span className="capitalize truncate">{st}</span>
-                  <div className="grid grid-cols-3 text-center">
-                    <span className="text-blue-600">{val.L}</span>
-                    <span className="text-pink-600">{val.P}</span>
-                    <span className="text-gray-600">{total}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      {/* Detail Statistik */}
+      <div className="p-4">
+        <h3 className="text-xl font-bold text-indigo-700 mb-2">{dusun}</h3>
+        <div className="grid grid-cols-2 gap-2 text-sm">
+          <div>Total Penduduk: {total}</div>
+          <div>Laki-laki: {lakiLaki}</div>
+          <div>Perempuan: {perempuan}</div>
+          <div>Anak-anak: {anakAnak}</div>
+          <div>Remaja: {remaja}</div>
+          <div>Dewasa: {dewasa}</div>
+          <div>Lansia: {lansia}</div>
+          <div>Sudah Kawin: {kawin}</div>
+          <div>Belum Kawin: {belumKawin}</div>
+          <div>Pernah Kawin: {pernahKawin}</div>
         </div>
       </div>
     </div>
   );
 }
 
-export default function PendudukDashboardPage() {
+// Custom Tick untuk YAxis Dusun (jika diperlukan, bisa disesuaikan)
+const CustomDusunTick = ({ x, y, payload }) => {
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text 
+        x={0} 
+        y={0} 
+        dx={-5} 
+        dy={5} 
+        textAnchor="end" 
+        fill="#374151" 
+        fontSize={13} 
+        fontWeight={600}
+        fontFamily="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+      >
+        {payload.value}
+      </text>
+    </g>
+  );
+};
+
+export default function PendudukDashboard() {
   const tabs = ["Demografi", "Ekonomi", "Pendidikan & Pekerjaan", "Bantuan"];
   const [tab, setTab] = useState("Demografi");
 
   // Filter state
-  const [dusunFilter, setDusunFilter] = useState("");
-  const [tahunFilter, setTahunFilter] = useState("");
-  const [bulanFilter, setBulanFilter] = useState("");
-  const [jenisKelaminFilter, setJenisKelaminFilter] = useState("");
-  const [statusKawinFilter, setStatusKawinFilter] = useState("");
-  const [umurMinFilter, setUmurMinFilter] = useState("");
-  const [umurMaxFilter, setUmurMaxFilter] = useState("");
+  const [dusun, setDusun] = useState("");
+  const [tahun, setTahun] = useState("");
+  const [bulan, setBulan] = useState("");
+  const [jenisKelamin, setJenisKelamin] = useState("");
+  const [statusKawin, setStatusKawin] = useState("");
+  const [umurMin, setUmurMin] = useState("");
+  const [umurMax, setUmurMax] = useState("");
   const [ekonomiFilter, setEkonomiFilter] = useState("");
   const [bantuanFilter, setBantuanFilter] = useState("");
   const [topN, setTopN] = useState(10);
 
   const [stats, setStats] = useState(null);
+  const [meta, setMeta] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Build query
   const buildQuery = () => {
     const qp = new URLSearchParams();
-    if (dusunFilter) qp.append("alamat_dusun", dusunFilter);
-    if (tahunFilter) qp.append("tahun", tahunFilter);
-    if (bulanFilter) qp.append("bulan", bulanFilter);
-    if (jenisKelaminFilter) qp.append("jenis_kelamin", jenisKelaminFilter);
-    if (statusKawinFilter) qp.append("status", statusKawinFilter);
-    if (umurMinFilter) qp.append("umur_min", umurMinFilter);
-    if (umurMaxFilter) qp.append("umur_max", umurMaxFilter);
+    if (dusun) qp.append("alamat_dusun", dusun);
+    if (tahun) qp.append("tahun", tahun);
+    if (bulan) qp.append("bulan", bulan);
+    if (jenisKelamin) qp.append("jenis_kelamin", jenisKelamin);
+    if (statusKawin) qp.append("status", statusKawin);
+    if (umurMin) qp.append("umur_min", umurMin);
+    if (umurMax) qp.append("umur_max", umurMax);
     if (ekonomiFilter) qp.append("miskin_sangat", ekonomiFilter);
     if (bantuanFilter) qp.append("bantuan_sosial", bantuanFilter);
     qp.append("limit", "10000");
@@ -249,8 +152,9 @@ export default function PendudukDashboardPage() {
       const q = buildQuery();
       const res = await fetch(`/api/penduduk/stats?${q}`);
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || "Gagal memuat data");
+      if (!res.ok) throw new Error(json?.error || "Gagal ambil data");
       setStats(json.stats || null);
+      setMeta(json.meta || null);
     } catch (err) {
       setError(err.message);
       setStats(null);
@@ -261,40 +165,40 @@ export default function PendudukDashboardPage() {
 
   useEffect(() => {
     fetchStats();
-    // eslint-disable-next-line
   }, []);
 
   const resetFilters = () => {
-    setDusunFilter("");
-    setTahunFilter("");
-    setBulanFilter("");
-    setJenisKelaminFilter("");
-    setStatusKawinFilter("");
-    setUmurMinFilter("");
-    setUmurMaxFilter("");
+    setDusun("");
+    setTahun("");
+    setBulan("");
+    setJenisKelamin("");
+    setStatusKawin("");
+    setUmurMin("");
+    setUmurMax("");
     setEkonomiFilter("");
     setBantuanFilter("");
     setTopN(10);
     fetchStats();
   };
 
-  // Data Preparation
+  // 📌 Data Preparation
   const perDusunData = useMemo(() => {
-    if (!stats?.detailPerDusun) return [];
-    return Object.entries(stats.detailPerDusun)
-      .map(([k, v]) => ({ dusun: k, ...v }))
-      .sort((a, b) => b.total - a.total);
+    if (!stats?.perDusun) return [];
+    return Object.entries(stats.perDusun)
+      .map(([k, v]) => ({ dusun: k, jml: v, ...stats }))
+      .sort((a, b) => b.jml - a.jml);
   }, [stats]);
 
   const perBulanData = useMemo(() => {
     if (!stats?.perBulan) return [];
+    // Mengubah angka bulan menjadi nama bulan
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
     return Object.entries(stats.perBulan)
       .map(([bulanNum, jml]) => ({
-        bulan: monthNames[parseInt(bulanNum) - 1],
+        bulan: monthNames[parseInt(bulanNum) - 1], // Konversi ke nama bulan
         jml,
       }))
-      .sort((a, b) => monthNames.indexOf(a.bulan) - monthNames.indexOf(b.bulan));
+      .sort((a, b) => monthNames.indexOf(a.bulan) - monthNames.indexOf(b.bulan)); // Urutkan berdasarkan bulan
   }, [stats]);
 
   const jenisKelaminData = [
@@ -308,6 +212,7 @@ export default function PendudukDashboardPage() {
     { label: "Pernah Kawin", value: stats?.statusKawin?.pernah || 0 },
   ];
 
+  // 📌 Pendidikan Mapping
   const pendidikanMap = {
     TK: "TK",
     SD: "SD",
@@ -346,6 +251,7 @@ export default function PendudukDashboardPage() {
 
   const ekonomiData = useMemo(() => {
     if (!stats?.ekonomi) return [];
+    // Urutkan kategori ekonomi secara logis
     const order = ["Sangat Miskin", "Miskin", "Kurang Mampu", "Mampu", "Kaya", "Sangat Kaya"];
     const data = Object.entries(stats.ekonomi).map(([k, v]) => ({ label: k, value: v }));
     return data.sort((a, b) => order.indexOf(a.label) - order.indexOf(b.label));
@@ -362,12 +268,13 @@ export default function PendudukDashboardPage() {
 
   const usiaData = useMemo(() => {
     if (!stats?.umurKategori) return [];
-    const order = Object.keys(umurLabelMap);
+    // Urutkan kategori usia secara logis
+    const order = ["Balita (0-4)", "Anak-anak (5-12)", "Remaja (13-17)", "Dewasa Muda (18-25)", "Dewasa (26-45)", "Paruh Baya (46-64)", "Lansia (65+)"];
     const data = Object.entries(stats.umurKategori).map(([k, v]) => ({
-      label: umurLabelMap[k] || k,
-      value: v.L + v.P,
+      label: k,
+      value: v,
     }));
-    return data.sort((a, b) => order.indexOf(a.label.split(' ')[0]) - order.indexOf(b.label.split(' ')[0]));
+    return data.sort((a, b) => order.indexOf(a.label) - order.indexOf(b.label));
   }, [stats]);
 
   const yatimData = useMemo(() => {
@@ -375,7 +282,7 @@ export default function PendudukDashboardPage() {
     return Object.entries(stats.yatim).map(([k, v]) => ({ label: k, value: v }));
   }, [stats]);
 
-  // Ringkasan Cards
+  // 📌 Ringkasan Cards
   const summaryCards = [
     { title: "Total Penduduk", value: stats?.total || 0, color: "bg-indigo-600" },
     { title: "Laki-laki", value: stats?.jenisKelamin?.L || 0, color: "bg-blue-600" },
@@ -385,51 +292,63 @@ export default function PendudukDashboardPage() {
     { title: "Yatim/Piatu", value: (stats?.yatim?.yatim || 0) + (stats?.yatim?.piatu || 0) + (stats?.yatim?.yatimpiatu || 0), color: "bg-yellow-500" },
   ];
 
-  if (loading) return <p className="p-6">Loading data...</p>;
-  if (error) return <p className="p-6 text-red-600">Gagal memuat data: {error}</p>;
-  if (!stats) return <p className="p-6 text-red-600">Tidak ada data yang tersedia.</p>;
+  // Styling Tooltip umum
+  const commonTooltipStyle = {
+    contentStyle: {
+      backgroundColor: '#FFFFFF',
+      border: '1px solid #D1D5DB',
+      borderRadius: '8px',
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+      padding: '8px 12px'
+    },
+    labelStyle: {
+      fontWeight: '600',
+      color: '#1F2937',
+      marginBottom: '4px'
+    },
+    itemStyle: {
+      color: '#374151',
+      fontSize: '13px'
+    }
+  };
+
+  // Styling Axis umum
+  const commonAxisTickStyle = {
+    fontSize: 12,
+    fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, sans-serif',
+    fill: '#6B7280',
+    fontWeight: 500
+  };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-3xl font-bold text-indigo-700 mb-6">📊 Dashboard Penduduk</h2>
 
-
-
- {/* Bagian bawah: per dusun */}
-      <div className="mt-10 mb-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {perDusunData.map(({ dusun, ...data }) => (
-            <DusunCard key={dusun} dusun={dusun} data={data} />
-          ))}
-        </div>
-      </div>
-
-
-
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow border border-gray-200 mb-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <input className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Dusun" value={dusunFilter} onChange={(e) => setDusunFilter(e.target.value)} />
-          <input className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Tahun (YYYY)" value={tahunFilter} onChange={(e) => setTahunFilter(e.target.value)} />
-          <select className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" value={bulanFilter} onChange={(e) => setBulanFilter(e.target.value)}>
+          <input className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Dusun" value={dusun} onChange={(e) => setDusun(e.target.value)} />
+          <input className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Tahun (YYYY)" value={tahun} onChange={(e) => setTahun(e.target.value)} />
+          <select className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" value={bulan} onChange={(e) => setBulan(e.target.value)}>
             <option value="">Semua Bulan</option>
             {Array.from({ length: 12 }, (_, i) => (
               <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString("id-ID", { month: "long" })}</option>
             ))}
           </select>
-          <select className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" value={jenisKelaminFilter} onChange={(e) => setJenisKelaminFilter(e.target.value)}>
+          <select className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" value={jenisKelamin} onChange={(e) => setJenisKelamin(e.target.value)}>
             <option value="">Semua JK</option>
             <option value="L">Laki-laki</option>
             <option value="P">Perempuan</option>
           </select>
-          <select className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" value={statusKawinFilter} onChange={(e) => setStatusKawinFilter(e.target.value)}>
+          <select className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" value={statusKawin} onChange={(e) => setStatusKawin(e.target.value)}>
             <option value="">Semua Status Kawin</option>
-            <option value="sudah">Sudah Kawin</option>
-            <option value="belum">Belum Kawin</option>
-            <option value="pernah">Pernah Kawin</option>
+            <option value="S">Sudah Kawin</option>
+            <option value="B">Belum Kawin</option>
+            <option value="P">Pernah Kawin</option>
           </select>
-          <input type="number" className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Umur Min" value={umurMinFilter} onChange={(e) => setUmurMinFilter(e.target.value)} />
-          <input type="number" className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Umur Max" value={umurMaxFilter} onChange={(e) => setUmurMaxFilter(e.target.value)} />
+          <input type="number" className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Umur Min" value={umurMin} onChange={(e) => setUmurMin(e.target.value)} />
+          <input type="number" className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" placeholder="Umur Max" value={umurMax} onChange={(e) => setUmurMax(e.target.value)} />
           <select className="p-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500" value={ekonomiFilter} onChange={(e) => setEkonomiFilter(e.target.value)}>
             <option value="">Semua Ekonomi</option>
             <option value="Sangat Miskin">Sangat Miskin</option>
@@ -457,18 +376,12 @@ export default function PendudukDashboardPage() {
         ))}
       </div>
 
-     
-
-
-
-
-
- {/* Tabs */}
-      <div className="flex gap-2 mb-6 mt-10">
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
         {tabs.map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
+          <button 
+            key={t} 
+            onClick={() => setTab(t)} 
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors 
               ${tab === t ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
           >
@@ -477,48 +390,66 @@ export default function PendudukDashboardPage() {
         ))}
       </div>
 
-
       {/* Content per Tab */}
       {tab === "Demografi" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Cards per Dusun */}
+          {perDusunData.map((data, index) => (
+            <DusunCard key={index} dusun={data.dusun} stats={stats} />
+          ))}
+
           <Card title="📅 Penduduk per Bulan Masuk">
             <ResponsiveContainer width="100%" height={320}>
               <LineChart data={perBulanData} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-                <CartesianGrid stroke="#F3F4F6" strokeDasharray="3 3" opacity={0.7} />
-                <XAxis dataKey="bulan" axisLine={false} tickLine={false} tick={commonAxisTickStyle} />
-                <YAxis axisLine={false} tickLine={false} tick={commonAxisTickStyle} />
+                <CartesianGrid 
+                  stroke="#F3F4F6" 
+                  strokeDasharray="3 3" 
+                  opacity={0.7}
+                />
+                <XAxis 
+                  dataKey="bulan"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={commonAxisTickStyle}
+                />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={commonAxisTickStyle}
+                />
                 <Tooltip {...commonTooltipStyle} formatter={tooltipFormatter} />
-                <Line
-                  type="monotone"
-                  dataKey="jml"
-                  stroke={BUSINESS_COLORS[0]}
-                  strokeWidth={3}
-                  dot={{
-                    r: 6,
-                    fill: BUSINESS_COLORS[0],
-                    strokeWidth: 2,
-                    stroke: '#FFFFFF'
+                <Line 
+                  type="monotone" 
+                  dataKey="jml" 
+                  stroke={BUSINESS_COLORS[0]} // Blue
+                  strokeWidth={3} 
+                  dot={{ 
+                    r: 6, 
+                    fill: BUSINESS_COLORS[0], 
+                    strokeWidth: 2, 
+                    stroke: '#FFFFFF' 
                   }}
-                  activeDot={{
-                    r: 8,
-                    fill: BUSINESS_COLORS[0],
-                    strokeWidth: 2,
-                    stroke: '#FFFFFF'
+                  activeDot={{ 
+                    r: 8, 
+                    fill: BUSINESS_COLORS[0], 
+                    strokeWidth: 2, 
+                    stroke: '#FFFFFF' 
                   }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </Card>
+
           <Card title="⚧️ Jenis Kelamin">
             <ResponsiveContainer width="100%" height={320}>
               <PieChart margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
                 <Pie
-                  data={jenisKelaminData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
+                  data={jenisKelaminData} 
+                  dataKey="value" 
+                  nameKey="name" 
+                  cx="50%" 
+                  cy="50%" 
+                  outerRadius={100} 
                   innerRadius={60}
                   paddingAngle={3}
                   label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
@@ -535,8 +466,8 @@ export default function PendudukDashboardPage() {
                       key={`cell-${index}`}
                       fill={
                         index === 0
-                          ? BUSINESS_COLORS[0]
-                          : BUSINESS_COLORS[1]
+                          ? BUSINESS_COLORS[0]  // Blue for Laki-laki
+                          : BUSINESS_COLORS[1] // Green for Perempuan
                       }
                     />
                   ))}
@@ -555,6 +486,7 @@ export default function PendudukDashboardPage() {
               </PieChart>
             </ResponsiveContainer>
           </Card>
+
           <Card title="👶 Kategori Usia">
             <ResponsiveContainer width="100%" height={320}>
               <BarChart
@@ -562,27 +494,43 @@ export default function PendudukDashboardPage() {
                 margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                 barCategoryGap="25%"
               >
-                <CartesianGrid stroke="#F3F4F6" strokeDasharray="3 3" opacity={0.7} />
-                <XAxis
+                <CartesianGrid 
+                  stroke="#F3F4F6" 
+                  strokeDasharray="3 3" 
+                  opacity={0.7}
+                />
+                <XAxis 
                   dataKey="label"
                   axisLine={false}
                   tickLine={false}
                   tick={commonAxisTickStyle}
                   angle={-45}
                   textAnchor="end"
-                  height={80}
+                  height={80} // Memberi ruang lebih untuk label miring
                 />
-                <YAxis axisLine={false} tickLine={false} tick={commonAxisTickStyle} />
+                <YAxis 
+                  axisLine={false}
+                  tickLine={false}
+                  tick={commonAxisTickStyle}
+                />
                 <Tooltip {...commonTooltipStyle} formatter={tooltipFormatter} />
-                <Bar
-                  dataKey="value"
+                <Bar 
+                  dataKey="value" 
                   radius={[4, 4, 0, 0]}
                   barSize={24}
                 >
                   {usiaData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={BUSINESS_COLORS[index % BUSINESS_COLORS.length]}
+                      fill={
+                        index === 0
+                          ? BUSINESS_COLORS[0]  // Blue for young
+                          : index === 1
+                          ? BUSINESS_COLORS[1] // Green for middle
+                          : index === 2
+                          ? BUSINESS_COLORS[2] // Amber for older
+                          : BUSINESS_COLORS[4] // Gray for others
+                      }
                       style={{
                         stroke: '#FFFFFF',
                         strokeWidth: 1
@@ -645,7 +593,7 @@ export default function PendudukDashboardPage() {
                 <XAxis dataKey="label" axisLine={false} tickLine={false} tick={commonAxisTickStyle} />
                 <YAxis axisLine={false} tickLine={false} tick={commonAxisTickStyle} />
                 <Tooltip {...commonTooltipStyle} formatter={tooltipFormatter} />
-                <Bar dataKey="value" fill={BUSINESS_COLORS[5]} radius={[4, 4, 0, 0]} barSize={24} />
+                <Bar dataKey="value" fill={BUSINESS_COLORS[5]} radius={[4, 4, 0, 0]} barSize={24} /> {/* Purple */}
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -661,7 +609,7 @@ export default function PendudukDashboardPage() {
                 <XAxis dataKey="label" angle={-45} textAnchor="end" interval={0} height={80} tick={commonAxisTickStyle} />
                 <YAxis axisLine={false} tickLine={false} tick={commonAxisTickStyle} />
                 <Tooltip {...commonTooltipStyle} formatter={tooltipFormatter} />
-                <Bar dataKey="value" fill={BUSINESS_COLORS[0]} radius={[4, 4, 0, 0]} barSize={24} />
+                <Bar dataKey="value" fill={BUSINESS_COLORS[0]} radius={[4, 4, 0, 0]} barSize={24} /> {/* Blue */}
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -672,7 +620,7 @@ export default function PendudukDashboardPage() {
                 <XAxis dataKey="label" angle={-45} textAnchor="end" interval={0} height={80} tick={commonAxisTickStyle} />
                 <YAxis axisLine={false} tickLine={false} tick={commonAxisTickStyle} />
                 <Tooltip {...commonTooltipStyle} formatter={tooltipFormatter} />
-                <Bar dataKey="value" fill={BUSINESS_COLORS[1]} radius={[4, 4, 0, 0]} barSize={24} />
+                <Bar dataKey="value" fill={BUSINESS_COLORS[1]} radius={[4, 4, 0, 0]} barSize={24} /> {/* Green */}
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -688,7 +636,7 @@ export default function PendudukDashboardPage() {
                 <XAxis dataKey="label" angle={-45} textAnchor="end" interval={0} height={80} tick={commonAxisTickStyle} />
                 <YAxis axisLine={false} tickLine={false} tick={commonAxisTickStyle} />
                 <Tooltip {...commonTooltipStyle} formatter={tooltipFormatter} />
-                <Bar dataKey="value" fill={BUSINESS_COLORS[6]} radius={[4, 4, 0, 0]} barSize={24} />
+                <Bar dataKey="value" fill={BUSINESS_COLORS[6]} radius={[4, 4, 0, 0]} barSize={24} /> {/* Teal */}
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -723,8 +671,6 @@ export default function PendudukDashboardPage() {
           </Card>
         </div>
       )}
-
-     
     </div>
   );
 }

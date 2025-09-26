@@ -16,4 +16,23 @@ body {
   z-index: 20000 !important; /* popup nested (lokasi dayah) */
 }
 
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(-10px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
 
+.animate-fadeInOut {
+  animation: fadeInOut 3s ease forwards;
+}
+
+
+/* 🔹 Utility untuk sembunyikan scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari */
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE, Edge */
+  scrollbar-width: none;     /* Firefox */
+}

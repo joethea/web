@@ -393,19 +393,6 @@ export default function PendudukDashboardPage() {
     <div className="p-6 bg-gray-50 min-h-screen">
       <h2 className="text-3xl font-bold text-indigo-700 mb-6">📊 Dashboard Penduduk</h2>
 
-
-
- {/* Bagian bawah: per dusun */}
-      <div className="mt-10 mb-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {perDusunData.map(({ dusun, ...data }) => (
-            <DusunCard key={dusun} dusun={dusun} data={data} />
-          ))}
-        </div>
-      </div>
-
-
-
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow border border-gray-200 mb-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -457,14 +444,8 @@ export default function PendudukDashboardPage() {
         ))}
       </div>
 
-     
-
-
-
-
-
- {/* Tabs */}
-      <div className="flex gap-2 mb-6 mt-10">
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6">
         {tabs.map((t) => (
           <button
             key={t}
@@ -476,7 +457,6 @@ export default function PendudukDashboardPage() {
           </button>
         ))}
       </div>
-
 
       {/* Content per Tab */}
       {tab === "Demografi" && (
@@ -724,7 +704,15 @@ export default function PendudukDashboardPage() {
         </div>
       )}
 
-     
+      {/* Bagian bawah: per dusun */}
+      <div className="mt-10">
+        <h3 className="text-xl font-bold text-gray-800 mb-4">Per Dusun</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {perDusunData.map(({ dusun, ...data }) => (
+            <DusunCard key={dusun} dusun={dusun} data={data} />
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
